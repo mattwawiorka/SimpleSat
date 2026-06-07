@@ -1,13 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 
 import { getSaturation, setSaturation, subscribeToSaturation } from "./juceBridge";
 import "./styles.css";
 
 const valueToAngle = (value: number) => -135 + value * 270;
+const clampSaturation = (value: number) => Math.min(1, Math.max(0, value));
 
 const App = () => {
   const [saturation, setLocalSaturation] = useState(0.2);
+  const dragState = useRef<{ startY: number; startValue: number } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -31,9 +33,40 @@ const App = () => {
   const rotation = useMemo(() => valueToAngle(saturation), [saturation]);
 
   const updateSaturation = (value: number) => {
-    const nextValue = Math.min(1, Math.max(0, value));
+    const nextValue = clampSaturation(value);
     setLocalSaturation(nextValue);
     setSaturation(nextValue);
+  };
+
+  const handleKnobPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+    dragState.current = {
+      startY: event.clientY,
+      startValue: saturation
+    };
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleKnobPointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (!dragState.current) {
+      return;
+    }
+
+    const deltaY = dragState.current.startY - event.clientY;
+    updateSaturation(dragState.current.startValue + deltaY / 240);
+  };
+
+  const handleKnobPointerEnd = (event: React.PointerEvent<HTMLButtonElement>) => {
+    dragState.current = null;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const handleKnobWheel = (event: React.WheelEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    updateSaturation(saturation + (event.deltaY < 0 ? 0.02 : -0.02));
   };
 
   return (
@@ -44,9 +77,22 @@ const App = () => {
           Saturation
         </label>
         <div className="knob-wrap">
-          <div className="knob" style={{ "--rotation": `${rotation}deg` } as React.CSSProperties}>
+          <button
+            className="knob"
+            type="button"
+            style={{ "--rotation": `${rotation}deg` } as React.CSSProperties}
+            onPointerDown={handleKnobPointerDown}
+            onPointerMove={handleKnobPointerMove}
+            onPointerUp={handleKnobPointerEnd}
+            onPointerCancel={handleKnobPointerEnd}
+            onWheel={handleKnobWheel}
+            aria-label="Saturation"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={percentage}
+          >
             <div className="knob-indicator" />
-          </div>
+          </button>
         </div>
         <input
           id="saturation"

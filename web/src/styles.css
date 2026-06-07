@@ -76,6 +76,7 @@ body {
   position: relative;
   width: 210px;
   aspect-ratio: 1;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 50%;
   background:
@@ -85,7 +86,18 @@ body {
     inset 0 3px 8px rgba(255, 255, 255, 0.07),
     inset 0 -16px 34px rgba(0, 0, 0, 0.45),
     0 20px 42px rgba(0, 0, 0, 0.32);
+  cursor: grab;
   transform: rotate(var(--rotation));
+  touch-action: none;
+}
+
+.knob:active {
+  cursor: grabbing;
+}
+
+.knob:focus-visible {
+  outline: 2px solid #ffb088;
+  outline-offset: 8px;
 }
 
 .knob::before {
