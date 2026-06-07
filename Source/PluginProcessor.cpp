@@ -14,6 +14,7 @@ SimpleSatAudioProcessor::SimpleSatAudioProcessor()
 void SimpleSatAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     saturationDSP.prepare (sampleRate, samplesPerBlock, getTotalNumOutputChannels());
+    setLatencySamples (saturationDSP.getLatencySamples());
 }
 
 void SimpleSatAudioProcessor::releaseResources()
