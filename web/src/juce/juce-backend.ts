@@ -1,6 +1,9 @@
 type JuceBackend = {
   emitEvent: (eventName: string, payload: unknown) => void;
-  addEventListener: (eventName: string, callback: (value: unknown) => void) => void;
+  addEventListener: (
+    eventName: string,
+    callback: (value: unknown) => void,
+  ) => unknown;
 };
 
 declare global {
@@ -44,7 +47,14 @@ const ensureCompletionListener = (() => {
   };
 })();
 
-const callNativeFunction = (name: string, ...params: unknown[]): Promise<unknown> => {
+export function hasJuceBackend() {
+  return getBackend() !== undefined;
+}
+
+export function callNativeFunction(
+  name: string,
+  ...params: unknown[]
+): Promise<unknown> {
   const backend = getBackend();
 
   if (!backend) {
@@ -61,37 +71,14 @@ const callNativeFunction = (name: string, ...params: unknown[]): Promise<unknown
     backend.emitEvent("__juce__invoke", {
       name,
       params,
-      resultId
+      resultId,
     });
   });
-};
+}
 
-export const getSaturation = async (): Promise<number> => {
-  const backend = getBackend();
-
-  if (!backend) {
-    return 0.2;
-  }
-
-  return coerceSaturation(await callNativeFunction("getSaturation"));
-};
-
-export const setSaturation = (value: number) => {
-  void callNativeFunction("setSaturation", coerceSaturation(value));
-};
-
-export const subscribeToSaturation = (callback: (value: number) => void) => {
-  getBackend()?.addEventListener("saturationChanged", (value) => {
-    callback(coerceSaturation(value));
-  });
-};
-
-export const coerceSaturation = (value: unknown): number => {
-  const numericValue = typeof value === "number" ? value : Number(value);
-
-  if (!Number.isFinite(numericValue)) {
-    return 0;
-  }
-
-  return Math.min(1, Math.max(0, numericValue));
-};
+export function subscribeToBackendEvent(
+  eventName: string,
+  callback: (value: unknown) => void,
+) {
+  getBackend()?.addEventListener(eventName, callback);
+}
