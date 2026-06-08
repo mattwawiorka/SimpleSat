@@ -11,6 +11,18 @@ else()
     find_package(JUCE CONFIG REQUIRED)
 endif()
 
+file(GLOB_RECURSE SIMPLE_SAT_WEB_ASSETS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/web/dist/*")
+
+if(NOT SIMPLE_SAT_WEB_ASSETS)
+    message(FATAL_ERROR "No WebView UI assets found in web/dist. Run `npm install` and `npm run build` from the web folder before configuring the native build.")
+endif()
+
+juce_add_binary_data(SimpleSatWebAssets
+    HEADER_NAME SimpleSatWebAssets.h
+    NAMESPACE SimpleSatWebAssets
+    SOURCES ${SIMPLE_SAT_WEB_ASSETS})
+
 juce_add_plugin(SimpleSat
     COMPANY_NAME "mwiki"
     IS_SYNTH FALSE
@@ -37,11 +49,11 @@ target_compile_definitions(SimpleSat
         JUCE_USE_WIN_WEBVIEW2=1
         JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
         JUCE_USE_CURL=0
-        JUCE_VST3_CAN_REPLACE_VST2=0
-        SIMPLE_SAT_WEB_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/web")
+        JUCE_VST3_CAN_REPLACE_VST2=0)
 
 target_link_libraries(SimpleSat
     PRIVATE
+        SimpleSatWebAssets
         juce::juce_audio_utils
         juce::juce_dsp
         juce::juce_gui_extra

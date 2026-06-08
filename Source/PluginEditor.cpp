@@ -1,10 +1,12 @@
 #include "PluginEditor.h"
 
+#include <SimpleSatWebAssets.h>
+
 namespace
 {
-juce::String getMimeType (const juce::File& file)
+juce::String getMimeType (const juce::String& path)
 {
-    const auto extension = file.getFileExtension().toLowerCase();
+    const auto extension = path.fromLastOccurrenceOf (".", true, false).toLowerCase();
 
     if (extension == ".html")
         return "text/html";
@@ -24,30 +26,47 @@ juce::String getMimeType (const juce::File& file)
     return "application/octet-stream";
 }
 
+juce::String getResourceFileName (const juce::String& requestedPath)
+{
+    if (requestedPath == "/")
+        return "index.html";
+
+    return requestedPath.fromLastOccurrenceOf ("/", false, false);
+}
+
+std::optional<juce::String> findBinaryDataResourceName (const juce::String& requestedFileName)
+{
+    for (auto index = 0; index < SimpleSatWebAssets::namedResourceListSize; ++index)
+    {
+        if (requestedFileName == SimpleSatWebAssets::originalFilenames[index])
+            return SimpleSatWebAssets::namedResourceList[index];
+    }
+
+    return {};
+}
+
 std::optional<juce::WebBrowserComponent::Resource> getWebResource (const juce::String& requestedPath)
 {
-    auto relativePath = requestedPath == "/" ? juce::String { "index.html" }
-                                             : requestedPath.fromFirstOccurrenceOf ("/", false, false);
+    const auto requestedFileName = getResourceFileName (requestedPath);
 
-    if (relativePath.contains (".."))
+    if (requestedFileName.isEmpty() || requestedFileName.contains (".."))
         return std::nullopt;
 
-    const auto file = juce::File (SIMPLE_SAT_WEB_ROOT)
-        .getChildFile ("dist")
-        .getChildFile (relativePath);
+    const auto resourceName = findBinaryDataResourceName (requestedFileName);
 
-    if (! file.existsAsFile())
+    if (! resourceName.has_value())
         return std::nullopt;
 
-    juce::MemoryBlock data;
+    auto dataSize = 0;
+    const auto* data = SimpleSatWebAssets::getNamedResource (resourceName->toRawUTF8(), dataSize);
 
-    if (! file.loadFileAsData (data))
+    if (data == nullptr || dataSize <= 0)
         return std::nullopt;
 
-    std::vector<std::byte> bytes (data.getSize());
-    std::memcpy (bytes.data(), data.getData(), data.getSize());
+    std::vector<std::byte> bytes (static_cast<size_t> (dataSize));
+    std::memcpy (bytes.data(), data, static_cast<size_t> (dataSize));
 
-    return juce::WebBrowserComponent::Resource { std::move (bytes), getMimeType (file) };
+    return juce::WebBrowserComponent::Resource { std::move (bytes), getMimeType (requestedFileName) };
 }
 
 juce::WebBrowserComponent::Options createBrowserOptions (SimpleSatAudioProcessor& processor)
