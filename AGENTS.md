@@ -23,8 +23,6 @@ Load plugin → turn Saturation knob → hear saturation
 - Work in a DAW
 - Save and restore the parameter value within the DAW project
 
-See adr/000-scope.md for scope details.
-
 ## Architecture
 
 Use a split native/web architecture.
@@ -47,16 +45,11 @@ Use a split native/web architecture.
 - React must not process audio.
 - The `Saturation` parameter is the bridge between UI and DSP.
 
-Relevant ADRs:
-
-- `adr/001-webview-ui.md`
-- `adr/002-saturation.md`
-
 ## Repo Layout
 
 - `Source/` — JUCE/C++ plugin processor, editor, DSP, and WebView host code.
 - `web/` — React/TypeScript/Vite frontend for the plugin UI.
-- `adr/` — architecture decision records. Read relevant ADRs before changing architecture, DSP, parameters, WebView integration, or build targets.
+- `design-notes/` — Documents design decisions. Read relevant design-notes before changing architecture, DSP, parameters, WebView integration, or build targets.
 - `CMakeLists.txt` — native JUCE/CMake build configuration.
 
 ## Development Build Instructions
@@ -100,8 +93,20 @@ The build should produce both:
 - A VST3 plugin for FL Studio and other VST3-compatible DAWs
 - A Standalone app for local development and testing
 
-## ADRs
+## Design Decision Documentation
 
-Read relevant ADRs before changing architecture, DSP, parameters, WebView integration, or build targets.
+Important design notes live in `docs/design-notes/`.
 
-If a change introduces a meaningful architecture decision, add or update an ADR.
+When adding or changing architecture, DSP design, parameter/state behavior, WebView behavior, build configuration, or release behavior:
+
+1. Check whether an existing design note should be updated.
+2. If not, create a new numbered design decision from `_template.md`.
+3. Every design note must include:
+   - Decision
+   - Why This Is a Good Design Move
+   - Context
+   - Design Rules
+   - Implementation Notes
+4. Keep them relatively brief (less than 200 lines is ideal).
+
+Design decision docs should be written in natural language for future humans and coding agents.
