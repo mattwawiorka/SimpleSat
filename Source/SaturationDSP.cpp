@@ -2,9 +2,10 @@
 
 #include <cmath>
 
-void SaturationDSP::prepare (double sampleRate, int maximumBlockSize, int numberOfChannels)
+void SaturationDSP::prepare (double sampleRate, int maximumBlockSize, int numberOfChannels, float initialSaturation)
 {
     currentSampleRate = sampleRate > 0.0 ? sampleRate : 44100.0;
+    initialSaturation = juce::jlimit (0.0f, 1.0f, initialSaturation);
 
     oversampling = std::make_unique<juce::dsp::Oversampling<float>> (
         static_cast<size_t> (juce::jmax (1, numberOfChannels)),
@@ -14,11 +15,10 @@ void SaturationDSP::prepare (double sampleRate, int maximumBlockSize, int number
         true);
 
     oversampling->initProcessing (static_cast<size_t> (juce::jmax (1, maximumBlockSize)));
+    oversampling->reset();
 
     smoothedSaturation.reset (currentSampleRate * static_cast<double> (oversampling->getOversamplingFactor()), 0.02);
-    smoothedSaturation.setCurrentAndTargetValue (0.0f);
-
-    reset();
+    smoothedSaturation.setCurrentAndTargetValue (initialSaturation);
 }
 
 void SaturationDSP::reset()

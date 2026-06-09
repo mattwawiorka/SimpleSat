@@ -18,6 +18,7 @@ Version 1 is intentionally small: the user should be able to load the plugin, tu
 - The `Saturation` parameter must be automatable by the DAW.
 - The `Saturation` value must be saved and restored by the DAW project.
 - Keep the DSP implementation simple and readable.
+- If parameter smoothing is used, initialise the smoothed current and target values from the restored/current parameter value during DSP preparation. Do not let smoothing imply a startup ramp from an arbitrary default.
 
 ## Implementation Notes
 
@@ -26,6 +27,8 @@ Version 1 is intentionally small: the user should be able to load the plugin, tu
 - Range: `0.0` to `1.0`
 - Default: `0.0` or `0.2`
 - Use C++ `tanh` waveshaping for the saturation stage.
+- Clamp saturation values to the parameter range at native boundaries before using them in DSP.
+- Startup preparation should seed smoothing with the actual current parameter value; normal parameter changes during playback should still update the smoothing target.
 - A simple drive mapping can use logic like:
 
 ```cpp

@@ -13,7 +13,7 @@ SimpleSatAudioProcessor::SimpleSatAudioProcessor()
 
 void SimpleSatAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    saturationDSP.prepare (sampleRate, samplesPerBlock, getTotalNumOutputChannels());
+    saturationDSP.prepare (sampleRate, samplesPerBlock, getTotalNumOutputChannels(), getSaturation());
     setLatencySamples (saturationDSP.getLatencySamples());
 }
 
@@ -125,7 +125,7 @@ juce::AudioProcessorValueTreeState& SimpleSatAudioProcessor::getValueTreeState()
 
 float SimpleSatAudioProcessor::getSaturation() const
 {
-    return saturationParameter != nullptr ? saturationParameter->load() : 0.2f;
+    return juce::jlimit (0.0f, 1.0f, saturationParameter != nullptr ? saturationParameter->load() : 0.2f);
 }
 
 void SimpleSatAudioProcessor::setSaturationFromUi (float value)

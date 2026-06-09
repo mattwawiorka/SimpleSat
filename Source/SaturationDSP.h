@@ -5,7 +5,7 @@
 class SaturationDSP
 {
 public:
-    void prepare (double sampleRate, int maximumBlockSize, int numberOfChannels);
+    void prepare (double sampleRate, int maximumBlockSize, int numberOfChannels, float initialSaturation);
     void reset();
     void process (juce::AudioBuffer<float>& buffer, float saturation);
     int getLatencySamples() const;
